@@ -1,0 +1,145 @@
+function mat = RowNormalization(mat)
+    s = sum(mat, 2);
+    mat = bsxfun(@rdivide, mat, s);
+endfunction
+
+function alpha = ForwardProb (N, TRANS, OUTPUT, PI, obs)
+    T = length(obs);
+    alpha = zeros(T, N);
+
+    for i = [1:N],
+        alpha(1, i) = PI(i) * OUTPUT(i, obs(1));
+    endfor
+
+    for t = [2:T],
+        for currentState = [1:N],
+            for prevState = [1:N],
+                alpha(t, currentState) += alpha(t - 1, prevState) * TRANS(prevState, currentState) * OUTPUT(currentState, obs(t));
+            endfor
+        endfor
+    endfor
+endfunction
+
+function beta = BackwardProb (N, TRANS, OUTPUT, PI, obs)
+    T = length(obs);
+    beta = zeros(T, N);
+
+    for state = [1:N],
+        beta(T, state) = 1;
+    endfor
+
+    for t = [T - 1:-1:1],
+        for currentState = [1:N],
+            for nextState = [1:N],
+                beta(t, currentState) += beta(t + 1, nextState) * TRANS(currentState, nextState) * OUTPUT(nextState, obs(t + 1));
+            endfor
+        endfor
+    endfor
+endfunction
+
+Q = 4;
+O = 6;
+examples = {[1,2,3], [1,2,3,4], [2,4,5,6]};
+M = length(examples);
+
+TRANS = RowNormalization(rand(Q, Q))
+OUTPUT = RowNormalization(rand(Q, O))
+PI = RowNormalization(rand(1, Q))
+
+loop = 0;
+
+while (loop<=0)
+    sum_eb = zeros(Q, Q); #expected number of transition from S_i to S_j
+    sum_gamma_only_1 = zeros(Q, O);
+    sum_gamma = zeros(Q, O); #expected number of state is S_i and Observation is V_k
+    sum_gamma_1 = zeros(Q, O); #expected number of state is S_i and Observation is V_k
+
+    for ex = [1:M],
+        seq = examples{1, ex};
+        alpha = ForwardProb(Q, TRANS, OUTPUT, PI, seq);
+        beta = BackwardProb(Q, TRANS, OUTPUT, PI, seq);
+        T = length(seq);
+
+        eb = zeros(Q, Q);
+        gamma_only_1 = zeros(Q, O);
+        gamma = zeros(Q, O);
+        gamma_1 = zeros(Q, O);
+
+        eb_t_tmp = zeros(Q, Q, T);
+        for t = [1:T - 1],
+            eb_t = zeros(Q, Q);
+
+            for i = [1:Q],
+                for j = [1:Q],
+                    eb_t(i, j) = alpha(t, i) * TRANS(i, j) * OUTPUT(j, seq(t + 1)) * beta(t + 1, j);
+                endfor
+            endfor
+
+            factor_one = sum(eb_t(:));
+            eb_t = eb_t / factor_one;
+
+            eb_t_tmp(:,:,t) = eb_t;
+
+            for i = [1:Q],
+                for j = [1:Q],
+                    eb(i, j) = eb(i, j) + eb_t(i, j);
+                endfor
+            endfor
+        endfor
+
+        for t = [1:T],
+            gamma_t = zeros(Q, O);
+            gamma_t_1 = zeros(Q, O);
+
+            for i = [1:Q],
+                gamma_t(i, seq(t)) = alpha(t ,i) * beta(t, i);
+
+            endfor
+
+            factor_one = sum(gamma_t(:));
+            gamma_t = gamma_t / factor_one;
+
+            for i=[1,Q],
+                if (t > T) %tested to be right
+                    a = gamma_t(i, seq(t))
+                    b = sum(eb_t_tmp(i,:,t))
+                    %assert(a == b);
+                endif
+            endfor
+
+            gamma = gamma + gamma_t;
+
+            if (t == 1)
+                gamma_only_1 = gamma_t;
+            endif
+
+            if (t != T)
+                gamma_1 = gamma_1 + gamma_t;
+            endif
+        endfor
+
+        sum_eb = sum_eb + eb;
+        sum_gamma_only_1 = sum_gamma_only_1 + gamma_only_1;
+        sum_gamma = sum_gamma + gamma;
+        sum_gamma_1 = sum_gamma_1 + gamma_1;
+    endfor
+
+    for i=[1,Q],
+        for j=[1,Q],
+            TRANS(i, j) = sum_eb(i, j) / sum(sum_gamma_1(i,:));
+        endfor
+        for v=[1,O],
+            OUTPUT(i, v) = sum_gamma(i, v) / sum(sum_gamma(i,:));
+        endfor
+        PI(i) = sum(sum_gamma_only_1(i, :));
+    endfor
+
+    PI = RowNormalization(PI);
+
+    TRANS
+    sum(TRANS, 2)
+    OUTPUT
+    sum(OUTPUT, 2)
+    PI
+    loop++;
+endwhile
