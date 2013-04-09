@@ -124,11 +124,11 @@ while (loop<=0)
         sum_gamma_1 = sum_gamma_1 + gamma_1;
     endfor
 
-    for i=[1,Q],
-        for j=[1,Q],
+    for i=[1:Q],
+        for j=[1:Q],
             TRANS(i, j) = sum_eb(i, j) / sum(sum_gamma_1(i,:));
         endfor
-        for v=[1,O],
+        for v=[1:O],
             OUTPUT(i, v) = sum_gamma(i, v) / sum(sum_gamma(i,:));
         endfor
         PI(i) = sum(sum_gamma_only_1(i, :));
