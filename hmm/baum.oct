@@ -37,6 +37,15 @@ function beta = BackwardProb (N, TRANS, OUTPUT, PI, obs)
     endfor
 endfunction
 
+#Get data from file
+train_fid = fopen('../data/train.data');
+
+while((txt = fgetl(train_fid)) ~= (-1) || isempty(txt))
+    txt
+endwhile
+
+fclose(train_fid);
+
 Q = 4;
 O = 6;
 examples = {[1,2,3], [1,2,3,4], [2,4,5,6]};
