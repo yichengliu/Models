@@ -56,7 +56,6 @@ while((txt = fgetl(train_fid)) ~= (-1) || isempty(txt))
         observation_set = unique([observation_set, word]);
         postag_set = unique([postag_set, tag]);
 
-        %sentence = [sentence, find(observation_set == word)]
         sentence = [sentence, find(ismember(observation_set, word))];
     endif
 endwhile
@@ -73,7 +72,7 @@ PI = RowNormalization(rand(1, Q))
 
 loop = 0;
 
-while (loop<=0)
+while ((loop ++) <= 0)
     sum_eb = zeros(Q, Q); #expected number of transition from S_i to S_j
     sum_gamma_only_1 = zeros(Q, O);
     sum_gamma = zeros(Q, O); #expected number of state is S_i and Observation is V_k
@@ -111,7 +110,6 @@ while (loop<=0)
 
             for i = [1:Q],
                 gamma_t(i, seq(t)) = alpha(t ,i) * beta(t, i);
-
             endfor
 
             factor_one = sum(gamma_t(:));
@@ -131,6 +129,8 @@ while (loop<=0)
         sum_eb = sum_eb + eb;
         sum_gamma = sum_gamma + gamma;
         sum_gamma_1 = sum_gamma_1 + gamma_1;
+
+        printf("Loop %d : %d%% train data done...\n", loop, floor(ex / M * 100));
     endfor
 
     for i=[1:Q],
@@ -144,8 +144,6 @@ while (loop<=0)
     endfor
 
     PI = RowNormalization(PI);
-
-    loop++;
 endwhile
 
 save '/tmp/TRANS' TRANS
