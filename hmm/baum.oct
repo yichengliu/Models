@@ -89,11 +89,7 @@ while (loop<=0)
 
             eb_t_tmp(:,:,t) = eb_t;
 
-            for i = [1:Q],
-                for j = [1:Q],
-                    eb(i, j) = eb(i, j) + eb_t(i, j);
-                endfor
-            endfor
+            eb = eb + eb_t;
         endfor
 
         for t = [1:T],
@@ -119,7 +115,7 @@ while (loop<=0)
             gamma = gamma + gamma_t;
 
             if (t == 1)
-                gamma_only_1 = gamma_t;
+                sum_gamma_only_1 += gamma_t;
             endif
 
             if (t != T)
@@ -128,7 +124,6 @@ while (loop<=0)
         endfor
 
         sum_eb = sum_eb + eb;
-        sum_gamma_only_1 = sum_gamma_only_1 + gamma_only_1;
         sum_gamma = sum_gamma + gamma;
         sum_gamma_1 = sum_gamma_1 + gamma_1;
     endfor
@@ -146,9 +141,9 @@ while (loop<=0)
     PI = RowNormalization(PI);
 
     TRANS
-    sum(TRANS, 2)
+    % sum(TRANS, 2)
     OUTPUT
-    sum(OUTPUT, 2)
+    % sum(OUTPUT, 2)
     PI
     loop++;
 endwhile
