@@ -92,11 +92,15 @@ while ((loop ++) <= 0)
         for t = [1:T - 1],
             eb_t = zeros(Q, Q);
 
-            for i = [1:Q],
-                for j = [1:Q],
-                    eb_t(i, j) = alpha(t, i) * TRANS(i, j) * OUTPUT(j, seq(t + 1)) * beta(t + 1, j);
-                endfor
-            endfor
+            % for i = [1:Q],
+                % for j = [1:Q],
+                    % eb_t(i, j) = alpha(t, i) * TRANS(i, j) * OUTPUT(j, seq(t + 1)) * beta(t + 1, j);
+                % endfor
+            % endfor
+
+            eb_t = transpose(alpha(t, :)) * beta(t + 1, :);
+            eb_t = eb_t .* TRANS;
+            eb_t = eb_t * diag(OUTPUT(:, seq(t + 1)));
 
             factor_one = sum(eb_t(:));
             eb_t = eb_t / factor_one;
