@@ -39,16 +39,32 @@ endfunction
 
 #Get data from file
 train_fid = fopen('../data/train.data');
+observation_set = {};
+postag_set = {};
+examples = {};
+sentence = [];
 
 while((txt = fgetl(train_fid)) ~= (-1) || isempty(txt))
-    txt
+    if (isempty(txt))
+        examples = [examples, sentence];
+        sentence = [];
+    else
+        split = strsplit(txt, " ");
+        word = split{1,1};
+        tag = split{1,2};
+
+        observation_set = unique([observation_set, word]);
+        postag_set = unique([postag_set, tag]);
+
+        %sentence = [sentence, find(observation_set == word)]
+        sentence = [sentence, find(ismember(observation_set, word))];
+    endif
 endwhile
 
 fclose(train_fid);
 
-Q = 4;
-O = 6;
-examples = {[1,2,3], [1,2,3,4], [2,4,5,6]};
+Q = length(postag_set);
+O = length(observation_set);
 M = length(examples);
 
 TRANS = RowNormalization(rand(Q, Q))
@@ -74,7 +90,6 @@ while (loop<=0)
         gamma = zeros(Q, O);
         gamma_1 = zeros(Q, O);
 
-        eb_t_tmp = zeros(Q, Q, T);
         for t = [1:T - 1],
             eb_t = zeros(Q, Q);
 
@@ -86,8 +101,6 @@ while (loop<=0)
 
             factor_one = sum(eb_t(:));
             eb_t = eb_t / factor_one;
-
-            eb_t_tmp(:,:,t) = eb_t;
 
             eb = eb + eb_t;
         endfor
@@ -103,14 +116,6 @@ while (loop<=0)
 
             factor_one = sum(gamma_t(:));
             gamma_t = gamma_t / factor_one;
-
-            for i=[1,Q],
-                if (t > T) %tested to be right
-                    a = gamma_t(i, seq(t))
-                    b = sum(eb_t_tmp(i,:,t))
-                    %assert(a == b);
-                endif
-            endfor
 
             gamma = gamma + gamma_t;
 
@@ -140,10 +145,9 @@ while (loop<=0)
 
     PI = RowNormalization(PI);
 
-    TRANS
-    % sum(TRANS, 2)
-    OUTPUT
-    % sum(OUTPUT, 2)
-    PI
     loop++;
 endwhile
+
+save '/tmp/TRANS' TRANS
+save '/tmp/OUTPUT' OUTPUT
+save '/tmp/PI' PI
