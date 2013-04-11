@@ -12,11 +12,13 @@ function alpha = ForwardProb (N, TRANS, OUTPUT, PI, obs)
     endfor
 
     for t = [2:T],
-        for currentState = [1:N],
-            for prevState = [1:N],
-                alpha(t, currentState) += alpha(t - 1, prevState) * TRANS(prevState, currentState) * OUTPUT(currentState, obs(t));
-            endfor
-        endfor
+        % for currentState = [1:N],
+            %% for prevState = [1:N],
+                %% alpha(t, currentState) += alpha(t - 1, prevState) * TRANS(prevState, currentState) * OUTPUT(currentState, obs(t));
+            %% endfor
+            % alpha(t, currentState) = (alpha(t - 1, :) * TRANS(:, currentState)) * OUTPUT(currentState, obs(t));
+        % endfor
+        alpha(t, :) = alpha(t - 1, :) * TRANS * diag(OUTPUT(:, obs(t)));
     endfor
 endfunction
 
@@ -29,11 +31,13 @@ function beta = BackwardProb (N, TRANS, OUTPUT, PI, obs)
     endfor
 
     for t = [T - 1:-1:1],
-        for currentState = [1:N],
-            for nextState = [1:N],
-                beta(t, currentState) += beta(t + 1, nextState) * TRANS(currentState, nextState) * OUTPUT(nextState, obs(t + 1));
-            endfor
-        endfor
+        % for currentState = [1:N],
+            %% for nextState = [1:N],
+                %% beta(t, currentState) += beta(t + 1, nextState) * TRANS(currentState, nextState) * OUTPUT(nextState, obs(t + 1));
+            %% endfor
+            % beta(t, currentState) = (beta(t + 1, :) .* TRANS(currentState, :)) * OUTPUT(:, obs(t + 1));
+        % endfor
+        beta(t, :) = (beta(t + 1, :) * diag(OUTPUT(:, obs(t + 1)))) * transpose(TRANS);
     endfor
 endfunction
 
@@ -80,8 +84,10 @@ while ((loop ++) <= 0)
 
     for ex = [1:M],
         seq = examples{1, ex};
+        disp "HEHE"
         alpha = ForwardProb(Q, TRANS, OUTPUT, PI, seq);
         beta = BackwardProb(Q, TRANS, OUTPUT, PI, seq);
+        disp "HAHA"
         T = length(seq);
 
         eb = zeros(Q, Q);
@@ -112,9 +118,10 @@ while ((loop ++) <= 0)
             gamma_t = zeros(Q, O);
             gamma_t_1 = zeros(Q, O);
 
-            for i = [1:Q],
-                gamma_t(i, seq(t)) = alpha(t ,i) * beta(t, i);
-            endfor
+            % for i = [1:Q],
+                % gamma_t(i, seq(t)) = alpha(t ,i) * beta(t, i);
+            % endfor
+            gamma_t(:, seq(t)) = transpose(alpha(t ,:) .* beta(t, :));
 
             factor_one = sum(gamma_t(:));
             gamma_t = gamma_t / factor_one;
@@ -148,6 +155,9 @@ while ((loop ++) <= 0)
     endfor
 
     PI = RowNormalization(PI);
+
+    sum(TRANS, 2)
+    sum(OUTPUT, 2)
 endwhile
 
 save '/tmp/TRANS' TRANS
