@@ -66,6 +66,7 @@ endwhile
 
 fclose(train_fid);
 
+DEBUG = false;
 Q = length(postag_set);
 O = length(observation_set);
 M = length(examples);
@@ -84,10 +85,8 @@ while ((loop ++) <= 0)
 
     for ex = [1:M],
         seq = examples{1, ex};
-        disp "HEHE"
         alpha = ForwardProb(Q, TRANS, OUTPUT, PI, seq);
         beta = BackwardProb(Q, TRANS, OUTPUT, PI, seq);
-        disp "HAHA"
         T = length(seq);
 
         eb = zeros(Q, Q);
@@ -156,8 +155,10 @@ while ((loop ++) <= 0)
 
     PI = RowNormalization(PI);
 
-    sum(TRANS, 2)
-    sum(OUTPUT, 2)
+    if (DEBUG)
+        sum(TRANS, 2)
+        sum(OUTPUT, 2)
+    endif
 endwhile
 
 save '/tmp/TRANS' TRANS
