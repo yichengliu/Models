@@ -12,12 +12,6 @@ function alpha = ForwardProb (N, TRANS, OUTPUT, PI, obs)
     endfor
 
     for t = [2:T],
-        % for currentState = [1:N],
-            %% for prevState = [1:N],
-                %% alpha(t, currentState) += alpha(t - 1, prevState) * TRANS(prevState, currentState) * OUTPUT(currentState, obs(t));
-            %% endfor
-            % alpha(t, currentState) = (alpha(t - 1, :) * TRANS(:, currentState)) * OUTPUT(currentState, obs(t));
-        % endfor
         alpha(t, :) = alpha(t - 1, :) * TRANS * diag(OUTPUT(:, obs(t)));
     endfor
 endfunction
@@ -31,12 +25,6 @@ function beta = BackwardProb (N, TRANS, OUTPUT, PI, obs)
     endfor
 
     for t = [T - 1:-1:1],
-        % for currentState = [1:N],
-            %% for nextState = [1:N],
-                %% beta(t, currentState) += beta(t + 1, nextState) * TRANS(currentState, nextState) * OUTPUT(nextState, obs(t + 1));
-            %% endfor
-            % beta(t, currentState) = (beta(t + 1, :) .* TRANS(currentState, :)) * OUTPUT(:, obs(t + 1));
-        % endfor
         beta(t, :) = (beta(t + 1, :) * diag(OUTPUT(:, obs(t + 1)))) * transpose(TRANS);
     endfor
 endfunction
@@ -97,12 +85,6 @@ while ((loop ++) <= 0)
         for t = [1:T - 1],
             eb_t = zeros(Q, Q);
 
-            % for i = [1:Q],
-                % for j = [1:Q],
-                    % eb_t(i, j) = alpha(t, i) * TRANS(i, j) * OUTPUT(j, seq(t + 1)) * beta(t + 1, j);
-                % endfor
-            % endfor
-
             eb_t = transpose(alpha(t, :)) * beta(t + 1, :);
             eb_t = eb_t .* TRANS;
             eb_t = eb_t * diag(OUTPUT(:, seq(t + 1)));
@@ -117,10 +99,7 @@ while ((loop ++) <= 0)
             gamma_t = zeros(Q, O);
             gamma_t_1 = zeros(Q, O);
 
-            % for i = [1:Q],
-                % gamma_t(i, seq(t)) = alpha(t ,i) * beta(t, i);
-            % endfor
-            gamma_t(:, seq(t)) = transpose(alpha(t ,:) .* beta(t, :));
+            gamma_t(:, seq(t)) = transpose(alpha(t, :) .* beta(t, :));
 
             factor_one = sum(gamma_t(:));
             gamma_t = gamma_t / factor_one;
