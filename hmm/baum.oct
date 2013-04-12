@@ -7,9 +7,7 @@ function alpha = ForwardProb (N, TRANS, OUTPUT, PI, obs)
     T = length(obs);
     alpha = zeros(T, N);
 
-    for i = [1:N],
-        alpha(1, i) = PI(i) * OUTPUT(i, obs(1));
-    endfor
+    alpha(1, :) = PI * diag(OUTPUT(:, obs(1)));
 
     for t = [2:T],
         alpha(t, :) = alpha(t - 1, :) * TRANS * diag(OUTPUT(:, obs(t)));
@@ -20,9 +18,7 @@ function beta = BackwardProb (N, TRANS, OUTPUT, PI, obs)
     T = length(obs);
     beta = zeros(T, N);
 
-    for state = [1:N],
-        beta(T, state) = 1;
-    endfor
+    beta(T, :) = ones(1, N);
 
     for t = [T - 1:-1:1],
         beta(t, :) = (beta(t + 1, :) * diag(OUTPUT(:, obs(t + 1)))) * transpose(TRANS);
